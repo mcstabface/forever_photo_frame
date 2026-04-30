@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "id": "c_0001",
+      "mode": "color",
+      "filename": "color/example_color_panel_ready.png",
+      "width": 1600,
+      "height": 1200,
+      "sha256": "replace_me",
+      "format": "png",
+      "encrypted": false,
+      "used_count": 0,
+      "active": true
+    },
+    {
+      "id": "m_0001",
+      "mode": "monochrome",
+      "filename": "monochrome/example_mono_panel_ready.png",
+      "width": 1600,
+      "height": 1200,
+      "sha256": "replace_me",
+      "format": "png",
+      "encrypted": false,
+      "used_count": 0,
+      "active": true
+    }
+  ]
+}
