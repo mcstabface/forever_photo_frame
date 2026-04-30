@@ -1,0 +1,5 @@
+Pillow
+numpy
+inky
+smbus2
+spidev
