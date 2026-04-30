@@ -31,6 +31,7 @@ If `state/state.json` or `artpack/manifest.json` are missing, initialize them wi
 
 ```bash
 python scripts/bootstrap_dev_assets.py
+```
 
 Create and activate a virtual environment:
 
@@ -47,7 +48,7 @@ Run locally without hardware:
 export PHOTOFRAME_USE_MOCK_DISPLAY=1
 export PHOTOFRAME_TICK_SECONDS=0.01
 export PHOTOFRAME_REFRESH_EVERY_TICKS=12000
-python app/runtime_loop.py
+python -m app.runtime_loop
 ```
 
 Reset local runtime state before a fresh test:
