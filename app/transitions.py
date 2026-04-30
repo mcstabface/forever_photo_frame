@@ -2,8 +2,8 @@ import math
 import random
 from typing import Any
 
-from config import ARTPACK_DIR, SUPPORTED_TRANSITION_TYPES
-from storage import load_json, save_json
+from app.config import ARTPACK_DIR, SUPPORTED_TRANSITION_TYPES
+from app.storage import load_json, save_json
 
 
 def load_transition_defs() -> list[dict]:

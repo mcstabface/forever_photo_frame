@@ -2,8 +2,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from config import ARTPACK_DIR, STATE_PATH, WORKING_PATH
-from storage import load_json, save_json
+from app.config import ARTPACK_DIR, STATE_PATH, WORKING_PATH
+from app.storage import load_json, save_json
 
 
 def load_manifest() -> dict:

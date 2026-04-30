@@ -4,8 +4,8 @@ from typing import Any
 from inky.auto import auto
 from PIL import Image
 
-from config import MOCK_PREVIEW_PATH
-from storage import atomic_save_image
+from app.config import MOCK_PREVIEW_PATH
+from app.storage import atomic_save_image
 
 
 class MockDisplay:
