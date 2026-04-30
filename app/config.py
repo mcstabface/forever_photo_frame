@@ -12,7 +12,7 @@ QUEUE_PATH = STATE_DIR / "queue.json"
 WORKING_PATH = STATE_DIR / "working_current_runtime.png"
 MOCK_PREVIEW_PATH = STATE_DIR / "mock_display_preview.png"
 
-TICK_SECONDS = 0.01
-REFRESH_EVERY_TICKS = 12000
+TICK_SECONDS = float(os.environ.get("PHOTOFRAME_TICK_SECONDS", "1"))
+REFRESH_EVERY_TICKS = int(os.environ.get("PHOTOFRAME_REFRESH_EVERY_TICKS", "900"))
 
 SUPPORTED_TRANSITION_TYPES = {"sweep", "random"}
