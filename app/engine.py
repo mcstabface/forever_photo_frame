@@ -7,6 +7,7 @@ from display import get_display
 from manifest import load_images_from_state, pick_next_active_image
 from storage import atomic_save_image, load_json, save_json
 from transitions import ensure_transition, pixel_for_transition
+from validation import validate_runtime_inputs
 
 
 def persist_refresh_frame(display: Any, current_img: Image.Image) -> None:
@@ -50,6 +51,7 @@ def complete_transition(state: dict[str, Any], current_img: Image.Image, display
 
 def run_runtime_loop() -> None:
     state = load_json(STATE_PATH)
+    validate_runtime_inputs(state)
     _, _, current_img, next_img = load_images_from_state(state)
 
     width, height = current_img.size
