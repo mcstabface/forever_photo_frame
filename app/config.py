@@ -1,7 +1,9 @@
+import os
 from pathlib import Path
 
 
-BASE_DIR = Path.home() / "photoframe"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(os.environ.get("PHOTOFRAME_HOME", PROJECT_ROOT)).resolve()
 ARTPACK_DIR = BASE_DIR / "artpack"
 STATE_DIR = BASE_DIR / "state"
 
