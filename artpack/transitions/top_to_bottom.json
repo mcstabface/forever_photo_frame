@@ -1,0 +1,9 @@
+{
+  "name": "top_to_bottom",
+  "type": "sweep",
+  "weight": 10,
+  "params": {
+    "axis": "y",
+    "direction": "asc"
+  }
+}

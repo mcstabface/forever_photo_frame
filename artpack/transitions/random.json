@@ -1,0 +1,6 @@
+{
+  "name": "random",
+  "type": "random",
+  "weight": 5,
+  "params": {}
+}

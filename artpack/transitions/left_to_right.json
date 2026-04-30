@@ -1,0 +1,9 @@
+{
+  "name": "left_to_right",
+  "type": "sweep",
+  "weight": 10,
+  "params": {
+    "axis": "x",
+    "direction": "asc"
+  }
+}
