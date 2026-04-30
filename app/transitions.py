@@ -1,8 +1,9 @@
+import math
 import random
 from typing import Any
 
-from config import ARTPACK_DIR, QUEUE_PATH, SUPPORTED_TRANSITION_TYPES
-from storage import load_json, load_optional_json, save_json
+from config import ARTPACK_DIR, SUPPORTED_TRANSITION_TYPES
+from storage import load_json, save_json
 
 
 def load_transition_defs() -> list[dict]:
@@ -33,33 +34,54 @@ def pick_transition() -> dict:
     return random.choices(supported, weights=weights, k=1)[0]
 
 
-def ensure_transition(state: dict, state_path) -> dict:
-    if state["transition"] is None:
-        state["transition"] = pick_transition()
-        save_json(state_path, state)
+def build_random_runtime(width: int, height: int) -> dict[str, int]:
+    total_pixels = width * height
 
-    return state["transition"]
+    if total_pixels <= 0:
+        raise RuntimeError("Image dimensions must be positive")
 
+    if total_pixels == 1:
+        return {
+            "seed": random.getrandbits(64),
+            "offset": 0,
+            "stride": 1,
+        }
 
-def build_random_queue(width: int, height: int) -> dict[str, Any]:
-    pixels = [(x, y) for y in range(height) for x in range(width)]
-    random.shuffle(pixels)
+    seed = random.getrandbits(64)
+    rng = random.Random(seed)
+
+    offset = rng.randrange(total_pixels)
+    stride = rng.randrange(1, total_pixels)
+
+    while math.gcd(stride, total_pixels) != 1:
+        stride += 1
+        if stride >= total_pixels:
+            stride = 1
+
     return {
-        "type": "random",
-        "width": width,
-        "height": height,
-        "pixels": pixels,
+        "seed": seed,
+        "offset": offset,
+        "stride": stride,
     }
 
 
-def load_or_create_random_queue(width: int, height: int) -> dict[str, Any]:
-    queue_data = load_optional_json(QUEUE_PATH)
+def ensure_transition(state: dict, state_path, width: int, height: int) -> dict:
+    transition_changed = False
 
-    if queue_data is None:
-        queue_data = build_random_queue(width, height)
-        save_json(QUEUE_PATH, queue_data)
+    if state["transition"] is None:
+        state["transition"] = pick_transition()
+        transition_changed = True
 
-    return queue_data
+    transition = state["transition"]
+
+    if transition["type"] == "random" and "runtime" not in transition:
+        transition["runtime"] = build_random_runtime(width, height)
+        transition_changed = True
+
+    if transition_changed:
+        save_json(state_path, state)
+
+    return transition
 
 
 def pixel_for_sweep(
@@ -91,25 +113,21 @@ def pixel_for_sweep(
 
 def pixel_for_random(
     queue_index: int,
-    queue_data: dict[str, Any],
+    runtime: dict[str, int],
     width: int,
     height: int,
 ) -> tuple[int, int]:
-    if queue_data["type"] != "random":
-        raise RuntimeError(f"Queue type is not random: {queue_data['type']}")
+    total_pixels = width * height
 
-    if queue_data["width"] != width or queue_data["height"] != height:
-        raise RuntimeError(
-            "Random queue dimensions do not match image size: "
-            f"{queue_data['width']}x{queue_data['height']} vs {width}x{height}"
-        )
-
-    pixels = queue_data["pixels"]
-
-    if queue_index >= len(pixels):
+    if queue_index >= total_pixels:
         raise IndexError("queue_index out of range")
 
-    x, y = pixels[queue_index]
+    offset = runtime["offset"]
+    stride = runtime["stride"]
+
+    pixel_index = (offset + (queue_index * stride)) % total_pixels
+    x = pixel_index % width
+    y = pixel_index // width
     return (x, y)
 
 
@@ -118,7 +136,6 @@ def pixel_for_transition(
     queue_index: int,
     width: int,
     height: int,
-    queue_data: dict[str, Any] | None = None,
 ) -> tuple[int, int]:
     transition_type = transition["type"]
 
@@ -132,11 +149,12 @@ def pixel_for_transition(
         )
 
     if transition_type == "random":
-        if queue_data is None:
-            raise RuntimeError("Random transition requires queue data")
+        runtime = transition.get("runtime")
+        if runtime is None:
+            raise RuntimeError("Random transition requires runtime parameters")
         return pixel_for_random(
             queue_index=queue_index,
-            queue_data=queue_data,
+            runtime=runtime,
             width=width,
             height=height,
         )
