@@ -1,9 +1,9 @@
 from typing import Any
 
-from inky.auto import auto
 from PIL import Image
 
 from config import QUEUE_PATH, REFRESH_EVERY_TICKS, STATE_PATH, TICK_SECONDS, WORKING_PATH
+from display import get_display
 from manifest import load_images_from_state, pick_next_active_image
 from storage import atomic_save_image, load_json, save_json
 from transitions import ensure_transition, load_or_create_random_queue, pixel_for_transition
@@ -64,7 +64,7 @@ def run_runtime_loop() -> None:
     current_px = current_img.load()
     next_px = next_img.load()
 
-    display = auto()
+    display = get_display()
 
     while state["queue_index"] < total_pixels:
         queue_index = state["queue_index"]
