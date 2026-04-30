@@ -10,6 +10,7 @@ STATE_DIR = BASE_DIR / "state"
 STATE_PATH = STATE_DIR / "state.json"
 QUEUE_PATH = STATE_DIR / "queue.json"
 WORKING_PATH = STATE_DIR / "working_current_runtime.png"
+MOCK_PREVIEW_PATH = STATE_DIR / "mock_display_preview.png"
 
 TICK_SECONDS = 0.01
 REFRESH_EVERY_TICKS = 12000
