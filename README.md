@@ -27,6 +27,10 @@ The frame reveals one image into the next over time instead of swapping instantl
 - batched refresh model confirmed
 
 ## Local development
+If `state/state.json` or `artpack/manifest.json` are missing, initialize them with:
+
+```bash
+python scripts/bootstrap_dev_assets.py
 
 Create and activate a virtual environment:
 
