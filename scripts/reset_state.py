@@ -11,8 +11,8 @@ MOCK_PREVIEW_PATH = STATE_DIR / "mock_display_preview.png"
 
 
 DEFAULT_STATE = {
-    "current_image": "m_0001",
-    "next_image": "c_0001",
+    "current_image": "c_0001",
+    "next_image": None,
     "mode": "color",
     "transition": None,
     "queue_index": 0,
