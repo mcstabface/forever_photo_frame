@@ -3,87 +3,81 @@ import time
 
 from PIL import Image
 
-from app.config import QUEUE_PATH, REFRESH_EVERY_TICKS, STATE_PATH, TICK_SECONDS, WORKING_PATH
+from app.config import DISPLAY_SECONDS, QUEUE_PATH, STATE_PATH, WORKING_PATH
 from app.display import get_display
-from app.manifest import load_images_from_state, pick_next_active_image
+from app.manifest import get_image_entry, pick_next_active_image
 from app.storage import atomic_save_image, load_json, save_json
-from app.transitions import ensure_transition, pixel_for_transition
 from app.validation import validate_runtime_inputs
 
 
-def persist_refresh_frame(display: Any, current_img: Image.Image) -> None:
-    atomic_save_image(current_img, WORKING_PATH)
-    display.set_image(current_img)
+def persist_display_frame(display: Any, image: Image.Image) -> None:
+    atomic_save_image(image, WORKING_PATH)
+    display.set_image(image)
     display.show()
 
 
-def complete_transition(state: dict[str, Any], current_img: Image.Image, display: Any) -> None:
-    persist_refresh_frame(display, current_img)
+def mark_current_image_used(state: dict[str, Any]) -> None:
+    current_image_id = state["current_image"]
+    mode = state["mode"]
 
-    completed_image_id = state["next_image"]
-    completed_mode = state["mode"]
+    if mode == "color":
+        if current_image_id not in state["used_color"]:
+            state["used_color"].append(current_image_id)
+    elif mode == "monochrome":
+        if current_image_id not in state["used_monochrome"]:
+            state["used_monochrome"].append(current_image_id)
 
-    state["current_image"] = completed_image_id
-    state["queue_index"] = 0
 
-    if completed_mode == "color":
-        if completed_image_id not in state["used_color"]:
-            state["used_color"].append(completed_image_id)
+def flip_mode(state: dict[str, Any]) -> None:
+    if state["mode"] == "color":
         state["mode"] = "monochrome"
-    elif completed_mode == "monochrome":
-        if completed_image_id not in state["used_monochrome"]:
-            state["used_monochrome"].append(completed_image_id)
+    elif state["mode"] == "monochrome":
         state["mode"] = "color"
+    else:
+        raise RuntimeError(f"Unsupported mode: {state['mode']}")
+
+
+def prepare_next_cycle(state: dict[str, Any]) -> None:
+    mark_current_image_used(state)
+    flip_mode(state)
 
     next_entry = pick_next_active_image(
         mode=state["mode"],
         exclude_image_id=state["current_image"],
     )
-    state["next_image"] = next_entry["id"]
-    state["transition"] = None
 
-    save_json(STATE_PATH, state)
+    state["current_image"] = next_entry["id"]
+    state["next_image"] = None
+    state["transition"] = None
+    state["queue_index"] = 0
 
     if QUEUE_PATH.exists():
         QUEUE_PATH.unlink()
 
-    print("transition complete")
+    save_json(STATE_PATH, state)
+
+
+def load_image_for_current_state(state: dict[str, Any]) -> Image.Image:
+    current_entry = get_image_entry(state["current_image"])
+    image_path = current_entry["filename"]
+
+    from app.config import ARTPACK_DIR
+
+    return Image.open(ARTPACK_DIR / image_path).convert("RGB")
 
 
 def run_runtime_loop() -> None:
-    state = load_json(STATE_PATH)
-    validate_runtime_inputs(state)
-    _, _, current_img, next_img = load_images_from_state(state)
-
-    width, height = current_img.size
-    total_pixels = width * height
-
-    transition = ensure_transition(state, STATE_PATH, width, height)
-
-    current_px = current_img.load()
-    next_px = next_img.load()
-
     display = get_display()
 
-    while state["queue_index"] < total_pixels:
-        queue_index = state["queue_index"]
+    while True:
+        state = load_json(STATE_PATH)
+        validate_runtime_inputs(state)
 
-        x, y = pixel_for_transition(
-            transition=transition,
-            queue_index=queue_index,
-            width=width,
-            height=height,
-        )
+        image = load_image_for_current_state(state)
+        persist_display_frame(display, image)
+        print(f"displayed image={state['current_image']} mode={state['mode']}")
 
-        current_px[x, y] = next_px[x, y]
-        state["queue_index"] += 1
-        save_json(STATE_PATH, state)
+        prepare_next_cycle(state)
+        print(f"next image={state['current_image']} mode={state['mode']} after {DISPLAY_SECONDS} seconds")
 
-        if state["queue_index"] % REFRESH_EVERY_TICKS == 0:
-            persist_refresh_frame(display, current_img)
-            print(f"refreshed at queue_index={state['queue_index']} pixel=({x}, {y})")
-
-        import time
-        time.sleep(TICK_SECONDS)
-
-    complete_transition(state, current_img, display)
+        time.sleep(DISPLAY_SECONDS)
