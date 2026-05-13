@@ -3,7 +3,6 @@ import hashlib
 import json
 import re
 import shutil
-import sys
 from pathlib import Path
 
 from PIL import Image, ImageOps
@@ -86,7 +85,14 @@ def panel_ready_image(source_path: Path, mode: str) -> Image.Image:
     )
 
 
-def add_image(source_path: Path, mode: str, active: bool) -> dict:
+def find_duplicate(manifest: dict, file_hash: str) -> dict | None:
+    for image in manifest.get("images", []):
+        if image.get("sha256") == file_hash:
+            return image
+    return None
+
+
+def add_image(source_path: Path, mode: str, active: bool, allow_duplicate: bool) -> dict:
     if mode not in VALID_MODES:
         raise RuntimeError(f"invalid mode: {mode}; expected one of {sorted(VALID_MODES)}")
 
@@ -101,8 +107,17 @@ def add_image(source_path: Path, mode: str, active: bool) -> dict:
     image = panel_ready_image(source_path, mode)
     image.save(output_path, format="PNG")
 
-    image_id = next_image_id(manifest, mode)
     file_hash = sha256_file(output_path)
+    duplicate = find_duplicate(manifest, file_hash)
+    if duplicate is not None and not allow_duplicate:
+        output_path.unlink(missing_ok=True)
+        raise RuntimeError(
+            "duplicate image detected; existing entry "
+            f"{duplicate['id']} uses sha256={file_hash}. "
+            "Pass --allow-duplicate to register it anyway."
+        )
+
+    image_id = next_image_id(manifest, mode)
     relative_filename = output_path.relative_to(ARTPACK_DIR).as_posix()
 
     entry = {
@@ -130,10 +145,16 @@ def main() -> int:
     parser.add_argument("--mode", required=True, choices=sorted(VALID_MODES), help="Target artpack mode")
     parser.add_argument("--inactive", action="store_true", help="Register the image as inactive")
     parser.add_argument("--copy-source", action="store_true", help="Also copy the original into artpack/<mode>/")
+    parser.add_argument("--allow-duplicate", action="store_true", help="Allow registering an image with a duplicate output hash")
     args = parser.parse_args()
 
     source_path = args.source.expanduser().resolve()
-    entry = add_image(source_path=source_path, mode=args.mode, active=not args.inactive)
+    entry = add_image(
+        source_path=source_path,
+        mode=args.mode,
+        active=not args.inactive,
+        allow_duplicate=args.allow_duplicate,
+    )
 
     if args.copy_source:
         original_dir = ARTPACK_DIR / args.mode / "source"
