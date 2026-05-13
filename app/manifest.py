@@ -18,18 +18,41 @@ def get_image_entry(image_id: str) -> dict:
     raise RuntimeError(f"Image not found: {image_id}")
 
 
-def pick_next_active_image(mode: str, exclude_image_id: str | None = None) -> dict:
+def active_images_for_mode(mode: str) -> list[dict]:
     manifest = load_manifest()
-    candidates = [
+    return [
         image
         for image in manifest["images"]
-        if image["active"] and image["mode"] == mode and image["id"] != exclude_image_id
+        if image["active"] and image["mode"] == mode
+    ]
+
+
+def pick_next_active_image(mode: str, exclude_image_id: str | None = None) -> dict:
+    candidates = [
+        image
+        for image in active_images_for_mode(mode)
+        if image["id"] != exclude_image_id
     ]
 
     if not candidates:
         raise RuntimeError(f"No active images found for mode={mode} excluding {exclude_image_id}")
 
     return candidates[0]
+
+
+def pick_next_unused_image(mode: str, used_ids: list[str]) -> tuple[dict, list[str]]:
+    candidates = active_images_for_mode(mode)
+
+    if not candidates:
+        raise RuntimeError(f"No active images found for mode={mode}")
+
+    unused = [image for image in candidates if image["id"] not in used_ids]
+
+    if unused:
+        return unused[0], used_ids
+
+    reset_used_ids: list[str] = []
+    return candidates[0], reset_used_ids
 
 
 def ensure_next_image(state: dict) -> dict:
