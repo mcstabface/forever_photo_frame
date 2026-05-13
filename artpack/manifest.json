@@ -24,6 +24,30 @@
       "encrypted": false,
       "used_count": 0,
       "active": true
+    },
+    {
+      "id": "c_0002",
+      "mode": "color",
+      "filename": "color/profile_panel_ready.png",
+      "width": 1600,
+      "height": 1200,
+      "sha256": "fbf9ee724b8dc96e6c421d5b20e2ca73561411ab5038f1f7b2081d5e03290462",
+      "format": "png",
+      "encrypted": false,
+      "used_count": 0,
+      "active": true
+    },
+    {
+      "id": "m_0002",
+      "mode": "monochrome",
+      "filename": "monochrome/man_at_sea_panel_ready.png",
+      "width": 1600,
+      "height": 1200,
+      "sha256": "c5a979c3e0c5c6693142fd78a8bc3a986e22818f2c9909ec1729e6e8c09831a2",
+      "format": "png",
+      "encrypted": false,
+      "used_count": 0,
+      "active": true
     }
   ]
 }
