@@ -24,6 +24,30 @@
       "encrypted": false,
       "used_count": 0,
       "active": true
+    },
+    {
+      "id": "c_0002",
+      "mode": "color",
+      "filename": "color/space_panel_ready.png",
+      "width": 1600,
+      "height": 1200,
+      "sha256": "ece948eb147a5fbd8afc899deacf67d752eae64c8e7d3c19b5bac4aab136dc8c",
+      "format": "png",
+      "encrypted": false,
+      "used_count": 0,
+      "active": true
+    },
+    {
+      "id": "m_0002",
+      "mode": "monochrome",
+      "filename": "monochrome/storm_panel_ready.png",
+      "width": 1600,
+      "height": 1200,
+      "sha256": "8b96ac590ff8d976eae32a9b24035d5affd3430032811c3d3464f259b2e1fecb",
+      "format": "png",
+      "encrypted": false,
+      "used_count": 0,
+      "active": true
     }
   ]
 }
