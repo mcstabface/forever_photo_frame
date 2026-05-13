@@ -41,10 +41,7 @@ def prepare_next_cycle(state: dict[str, Any]) -> None:
     mark_current_image_used(state)
     flip_mode(state)
 
-    next_entry = pick_next_active_image(
-        mode=state["mode"],
-        exclude_image_id=state["current_image"],
-    )
+    next_entry = pick_next_active_image(mode=state["mode"])
 
     state["current_image"] = next_entry["id"]
     state["next_image"] = None
