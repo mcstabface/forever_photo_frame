@@ -5,7 +5,7 @@ from PIL import Image
 
 from app.config import DISPLAY_SECONDS, QUEUE_PATH, STATE_PATH, WORKING_PATH
 from app.display import get_display
-from app.manifest import get_image_entry, pick_next_active_image
+from app.manifest import get_image_entry, pick_next_unused_image
 from app.storage import atomic_save_image, load_json, save_json
 from app.validation import validate_runtime_inputs
 
@@ -37,12 +37,25 @@ def flip_mode(state: dict[str, Any]) -> None:
         raise RuntimeError(f"Unsupported mode: {state['mode']}")
 
 
+def used_key_for_mode(mode: str) -> str:
+    if mode == "color":
+        return "used_color"
+    if mode == "monochrome":
+        return "used_monochrome"
+    raise RuntimeError(f"Unsupported mode: {mode}")
+
+
 def prepare_next_cycle(state: dict[str, Any]) -> None:
     mark_current_image_used(state)
     flip_mode(state)
 
-    next_entry = pick_next_active_image(mode=state["mode"])
+    used_key = used_key_for_mode(state["mode"])
+    next_entry, updated_used_ids = pick_next_unused_image(
+        mode=state["mode"],
+        used_ids=state[used_key],
+    )
 
+    state[used_key] = updated_used_ids
     state["current_image"] = next_entry["id"]
     state["next_image"] = None
     state["transition"] = None
